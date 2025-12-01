@@ -3,6 +3,13 @@
 // Importera SeriesModel
 const SeriesModel = require('../models/serie.model');
 
+// Importera Joi-scheman
+const {
+    createSeriesSchema,
+    updateSeriesSchema
+} = require('../validation/serieSchemas');
+
+
 // Controller-objektet med alla handlers
 const seriesController = {
 
@@ -41,32 +48,33 @@ const seriesController = {
         }
     },
 
-    // Skapa ny serie
+    // Skapa ny serie (POST)
     async create(request, h) {
-        const { title, seasons, completed } = request.payload || {};
+        const payload = request.payload || {};
 
-        // Enkel validering (kanske lägger till JOI senare)
-        if (!title || seasons === undefined) {
+        // JOI-validering
+        const { error, value } = createSeriesSchema.validate(payload, {
+            abortEarly: false
+        });
+
+        if (error) {
+            const details = error.details.map(d => d.message);
+
             return h
                 .response({
-                    error: 'Fälten "title" och "seasons" är obligatoriska.'
+                    error: 'Valideringsfel i inskickad data.',
+                    details: details
                 })
                 .code(400);
         }
 
-        if (typeof seasons !== 'number') {
-            return h
-                .response({
-                    error: '"seasons" måste vara ett nummer.'
-                })
-                .code(400);
-        }
+        const { title, seasons, completed } = value;
 
         try {
             const newSerie = await SeriesModel.create(
                 title,
                 seasons,
-                completed ?? false // default = false om undefined
+                completed ?? false
             );
 
             return h.response(newSerie).code(201);
@@ -78,36 +86,28 @@ const seriesController = {
         }
     },
 
-    // Uppdatera en befintlig serie
+    // Uppdatera en befintlig serie (PUT)
     async update(request, h) {
         const { id } = request.params;
-        const { title, seasons, completed } = request.payload || {};
+        const payload = request.payload || {};
 
-        // För PUT kräver vi alla fält
-        if (!title || seasons === undefined || completed === undefined) {
+        // JOI-validering
+        const { error, value } = updateSeriesSchema.validate(payload, {
+            abortEarly: false
+        });
+
+        if (error) {
+            const details = error.details.map(d => d.message);
+
             return h
                 .response({
-                    error:
-                        'Fälten "title", "seasons" och "completed" är obligatoriska vid uppdatering.'
+                    error: 'Valideringsfel i inskickad data.',
+                    details: details
                 })
                 .code(400);
         }
 
-        if (typeof seasons !== 'number') {
-            return h
-                .response({
-                    error: '"seasons" måste vara ett nummer.'
-                })
-                .code(400);
-        }
-
-        if (typeof completed !== 'boolean') {
-            return h
-                .response({
-                    error: '"completed" måste vara true eller false.'
-                })
-                .code(400);
-        }
+        const { title, seasons, completed } = value;
 
         try {
             const updatedSerie = await SeriesModel.update(
