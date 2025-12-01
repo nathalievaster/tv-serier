@@ -7,8 +7,6 @@ const initDb = require('./initdb');
 const seriesRoutes = require('./routes/serie.routes');
 dotenv.config();
 
-const Hapi = require('@hapi/hapi');
-
 const init = async () => {
 
     const server = Hapi.server({
