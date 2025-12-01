@@ -4,6 +4,7 @@
 const Hapi = require('@hapi/hapi');
 const dotenv = require('dotenv');
 const initDb = require('./initdb');
+const seriesRoutes = require('./routes/serie.routes');
 dotenv.config();
 
 const Hapi = require('@hapi/hapi');
@@ -17,6 +18,9 @@ const init = async () => {
 
     // Initierar databasen
     await initDb();
+
+    // Importera routes för serier
+    server.route(seriesRoutes);
 
     await server.start();
     console.log('Server running on %s', server.info.uri);
